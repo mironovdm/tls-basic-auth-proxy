@@ -1,2 +1,5 @@
 .vscode/
 _spec.txt
+venv/
+__pycache__/
+
