@@ -21,6 +21,7 @@ class ConnHandler(threading.Thread):
     def __init__(self, clisock: ssl.SSLSocket, addr: tuple, *args, **kwargs):
         self.sock = clisock
         self.sock.settimeout(cfg.SOCK_TIMEOUT)
+        self.addr = addr
         super().__init__(*args, **kwargs)
 
     def run(self) -> None:
@@ -81,7 +82,7 @@ class ConnHandler(threading.Thread):
         self.socksend(self.sock, resp)
 
     def proxy_request(self, msgbuf: bytes):
-        # Create socket to remote target
+        """Proxy request to a remote server."""
         rsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         rsock.connect((cfg.PROM_HOST, cfg.PROM_PORT))
 
@@ -149,9 +150,11 @@ def main():
     try:
         accept_loop(sock)
     except KeyboardInterrupt:
-        logging.debug('got SIGINT')
-    except OSError:
-        traceback.print_exc()
+        logging.debug('got SIGINT(KeyboardInterrupt)')
+    except OSError as err:
+        logging.error(err)
+        if __debug__:
+            traceback.print_exc()
 
     sock.close()
 

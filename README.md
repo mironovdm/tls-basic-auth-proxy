@@ -1,4 +1,4 @@
 # README
-This is a simple Python HTTPS proxy server with HTTP basic authentication. Initially was created to secure Prometheus access but may be used for another similar purposes.
+This is a simple Python HTTPS proxy server with HTTP basic authentication. Initially was created to secure access to Prometheus but may be used for another similar purposes. A proxied request to a remote server is not secured by TLS.
 
-In the current form it is not very suitable for high load projects because of using threads to handle accepted connections.
+Uses threads to handle connections so not suitable for high loads.
