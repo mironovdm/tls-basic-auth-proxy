@@ -1,7 +1,4 @@
-"""
-@todo respond with gateway unavalable if target destionation is unaval
-@todo Connection keep-alive support
-"""
+import base64
 import logging
 import socket
 import ssl
@@ -31,7 +28,7 @@ class ConnHandler(threading.Thread):
 
         while rxbuf:
             try:
-                rxbuf = self.sock.recv(cfg.RCV_BUF_SIZE)
+                rxbuf = self.sock.recv(cfg.CHUNK_SIZE)
             except ssl.SSLError as e:
                 logging.error('ssl.SSLError, %s', e)
                 err = True
@@ -68,13 +65,26 @@ class ConnHandler(threading.Thread):
     @staticmethod
     def check_basic_auth(msgbuf: bytes):
         buflower = msgbuf.lower()
-        if b'authorization:' not in buflower:
+        try:
+            authpos = buflower.index(b'authorization:')
+        except ValueError:
+            raise BasicAuthError
+
+        authheader = msgbuf[authpos:].split(b'\r\n', maxsplit=1)[0]
+        headerdata = authheader.partition(b':')[2].lstrip()
+        authdata = headerdata.split(b' ')[1]
+        print('#############', authdata)
+        login, passwd = base64.b64decode(authdata).decode().split(':')
+
+        print(login, passwd)
+
+        if login != cfg.BASIC_LOGIN or passwd != cfg.BASIC_PASSWD:
             raise BasicAuthError
 
     def basicauth_err(self):
         resp = (
-            b'HTTP/1.1 401\r\n'
-            b'WWW-Authenticate: Basic realm="Access forbidden"\r\n\r\n'
+            b'HTTP/1.1 401 Unauthorized\r\n'
+            b'WWW-Authenticate: Basic realm="' + bytes(cfg.BASIC_REALM, 'ascii') + b'"\r\n\r\n'
         )
 
         logging.debug(resp)
@@ -82,16 +92,17 @@ class ConnHandler(threading.Thread):
         self.socksend(self.sock, resp)
 
     def proxy_request(self, msgbuf: bytes):
-        """Proxy request to a remote server."""
+        """Proxy received request to a remote server and return response to the 
+        requester."""
         rsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        rsock.connect((cfg.PROM_HOST, cfg.PROM_PORT))
+        rsock.connect((cfg.PROXIED_HOST, cfg.PROXIED_PORT))
 
         self.socksend(rsock, msgbuf)
         rsock.shutdown(socket.SHUT_WR)
 
         chunk = True
         while chunk:
-            chunk = rsock.recv(cfg.RCV_BUF_SIZE)
+            chunk = rsock.recv(cfg.CHUNK_SIZE)
             if chunk:
                 self.socksend(self.sock, chunk)
 
@@ -105,15 +116,13 @@ class ConnHandler(threading.Thread):
         sent = 0
         msglen = len(msg)
 
-        print(sock.send)
-
         while sent < msglen:
             sent += sock.send(msg[sent:])
 
 
 def get_tlscontext() -> ssl.SSLContext:
     ctx = ssl.create_default_context(purpose=ssl.Purpose.CLIENT_AUTH)
-    ctx.load_cert_chain(certfile='ssl/cert.pem', keyfile='ssl/private.pem')
+    ctx.load_cert_chain(certfile=cfg.CERTFILE_PATH, keyfile=cfg.KEYFILE_PATH)
     # Enable selfsigned certificates
     ctx.verify_mode = ssl.CERT_OPTIONAL
 
