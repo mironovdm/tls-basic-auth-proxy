@@ -73,18 +73,16 @@ class ConnHandler(threading.Thread):
         authheader = msgbuf[authpos:].split(b'\r\n', maxsplit=1)[0]
         headerdata = authheader.partition(b':')[2].lstrip()
         authdata = headerdata.split(b' ')[1]
-        print('#############', authdata)
         login, passwd = base64.b64decode(authdata).decode().split(':')
 
-        print(login, passwd)
-
-        if login != cfg.BASIC_LOGIN or passwd != cfg.BASIC_PASSWD:
+        if not (login == cfg.BASIC_LOGIN and passwd == cfg.BASIC_PASSWD):
             raise BasicAuthError
 
     def basicauth_err(self):
         resp = (
             b'HTTP/1.1 401 Unauthorized\r\n'
-            b'WWW-Authenticate: Basic realm="' + bytes(cfg.BASIC_REALM, 'ascii') + b'"\r\n\r\n'
+            b'WWW-Authenticate: Basic realm="' + 
+                bytes(cfg.BASIC_REALM, 'ascii') + b'"\r\n\r\n'
         )
 
         logging.debug(resp)
