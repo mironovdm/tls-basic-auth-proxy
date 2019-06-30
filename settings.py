@@ -18,3 +18,7 @@ BASIC_REALM = 'Access to resource'
 # TLS settings
 CERTFILE_PATH = 'ssl/cert.pem'
 KEYFILE_PATH = 'ssl/private.pem'
+
+# Adds HSTS header to response with specified MAX_AGE period
+HSTS = False
+HTST_MAX_AGE = 60

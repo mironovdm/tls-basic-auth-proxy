@@ -23,7 +23,7 @@ class ConnHandler(threading.Thread):
 
     def run(self) -> None:
         rxbuf = True
-        msgbuf = b''
+        msgbuf = []
         err = False
 
         while rxbuf:
@@ -39,11 +39,13 @@ class ConnHandler(threading.Thread):
                 err = True
                 break
 
-            msgbuf += rxbuf
+            msgbuf.append(rxbuf)
             logging.debug(rxbuf)
 
             if b'\r\n\r\n' in rxbuf:
                 break
+
+        msgbug = b''.join(msgbuf)
 
         if not err and msgbuf:
             try:
@@ -118,7 +120,7 @@ class ConnHandler(threading.Thread):
             sent += sock.send(msg[sent:])
 
 
-def get_tlscontext() -> ssl.SSLContext:
+def create_tls_context() -> ssl.SSLContext:
     ctx = ssl.create_default_context(purpose=ssl.Purpose.CLIENT_AUTH)
     ctx.load_cert_chain(certfile=cfg.CERTFILE_PATH, keyfile=cfg.KEYFILE_PATH)
     # Enable selfsigned certificates
@@ -147,7 +149,7 @@ def main():
     # begin to listen and accept connections on bounded socket
     sock.listen(cfg.BACKLOG)
 
-    tlsctx = get_tlscontext()
+    tlsctx = create_tls_context()
     sock = tlsctx.wrap_socket(sock, server_side=True,
                                     do_handshake_on_connect=False,
                                     suppress_ragged_eofs=False)
