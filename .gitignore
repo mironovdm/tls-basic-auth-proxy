@@ -1,5 +1,13 @@
+# IDE
 .vscode/
-_spec.txt
+.idea/
+
+# Python environment
 venv/
 __pycache__/
+
+# SSL certificates
 ssl/
+
+# Other
+_spec.txt

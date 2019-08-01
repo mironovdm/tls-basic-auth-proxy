@@ -1,3 +1,5 @@
+DEBUG = False
+
 HOST = ''
 PORT = 9091
 
