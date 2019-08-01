@@ -8,6 +8,9 @@ Uses threads to handle connections so not suitable for high loads.
 
 **Important note**: keep-alive connections are not supported yet.
 
+## Setup
+Just copy source files to preferred directory.
+
 ## Configuration
 Open `settings.py` file. Set these variables to the values that determine 
 the server that you want to secure:
@@ -16,15 +19,15 @@ PROXIED_HOST = 'localhost'
 PROXIED_PORT = 9090
 ```
 
-These settings determine network interface where this TLS-server would be listen for
+These settings determine network interface where this TLS-server will listen for
 incoming connections. Leave `HOST` to empty string if you need to listen on all
-available intefaces:  
+available interfaces:  
 ```python
 HOST = ''
 PORT = 9091
 ```
 
-Change basic-auth credentials to desired values: 
+Change basic-auth credentials to preferred values: 
 ```python
 BASIC_LOGIN = 'admin'
 BASIC_PASSWD = 'passwd'
